@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Allow the browser to call this from anywhere
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
@@ -8,19 +7,30 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  // 1. Check your private key
-  const provided =
-    req.headers['x-api-key'] || req.query.key;
+  const provided = req.headers['x-api-key'] || req.query.key;
   const validKey = process.env.MY_API_KEY;
 
   if (!validKey || provided !== validKey) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({
+      creator: {
+        name: 'Aritra Nath',
+        instagram: '@its_aritra_nath',
+        instagram_url: 'https://instagram.com/its_aritra_nath'
+      },
+      error: 'Unauthorized'
+    });
   }
 
-  // 2. Read the hidden upstream URL from env
   const upstream = process.env.ISS_API_URL;
   if (!upstream) {
-    return res.status(500).json({ error: 'Server misconfigured' });
+    return res.status(500).json({
+      creator: {
+        name: 'Aritra Nath',
+        instagram: '@its_aritra_nath',
+        instagram_url: 'https://instagram.com/its_aritra_nath'
+      },
+      error: 'Server misconfigured'
+    });
   }
 
   try {
@@ -29,18 +39,37 @@ export default async function handler(req, res) {
     });
 
     if (!upstreamRes.ok) {
-      return res
-        .status(upstreamRes.status)
-        .json({ error: 'Upstream error' });
+      return res.status(upstreamRes.status).json({
+        creator: {
+          name: 'Aritra Nath',
+          instagram: '@its_aritra_nath',
+          instagram_url: 'https://instagram.com/its_aritra_nath'
+        },
+        error: 'Upstream error'
+      });
     }
 
     const data = await upstreamRes.json();
 
-    // Cache for 1s at the edge (ISS moves fast)
     res.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate=5');
 
-    return res.status(200).json(data);
+    // Merge ISS data + creator info
+    return res.status(200).json({
+      creator: {
+        name: 'Aritra Nath',
+        instagram: '@its_aritra_nath',
+        instagram_url: 'https://instagram.com/its_aritra_nath'
+      },
+      ...data
+    });
   } catch (err) {
-    return res.status(502).json({ error: 'Failed to reach upstream' });
+    return res.status(502).json({
+      creator: {
+        name: 'Aritra Nath',
+        instagram: '@its_aritra_nath',
+        instagram_url: 'https://instagram.com/its_aritra_nath'
+      },
+      error: 'Failed to reach upstream'
+    });
   }
 }
