@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>ISS Tracker</title>
+</head>
+<body>
+  <h1>ISS Live Position</h1>
+  <pre id="out">Loading…</pre>
+
+  <script>
+    const API_KEY = 'aritra';   // sent to your own proxy only
+
+    async function loadISS() {
+      try {
+        const res = await fetch('/api/iss', {
+          headers: { 'x-api-key': API_KEY }
+        });
+
+        if (!res.ok) {
+          document.getElementById('out').textContent =
+            'Error: ' + res.status;
+          return;
+        }
+
+        const data = await res.json();
+        document.getElementById('out').textContent =
+          JSON.stringify(data, null, 2);
+      } catch (e) {
+        document.getElementById('out').textContent = 'Network error';
+      }
+    }
+
+    loadISS();
+    setInterval(loadISS, 5000);   // refresh every 5s
+  </script>
+</body>
+</html>
